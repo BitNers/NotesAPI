@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace NotesAPI.Controllers
 {
-    [Route("[controller]")]
+    [Route("/")]
     [ApiController]
     public class HomeController : ControllerBase
     {
@@ -11,5 +11,6 @@ namespace NotesAPI.Controllers
         public OkObjectResult Get() {
             return Ok("Hello");
         }
+
     }
 }
