@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NotesAPI.Models
@@ -23,14 +24,13 @@ namespace NotesAPI.Models
         [DataType(DataType.Password)]
         public string? Password { get; set; }
         
-        [Required]
         public string? PasswordSalt { get; set; }
 
         public ICollection<NotesModel>? Notes { get; set; }
 
         [DataType(DataType.DateTime)]
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime created_at { get; set; } 
+        
+        public DateTime created_at { get; set; } = DateTime.Now;
         
         [DataType(DataType.DateTime)]
         public DateTime updated_at { get; set; }
