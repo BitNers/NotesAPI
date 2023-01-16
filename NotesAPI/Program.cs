@@ -29,6 +29,7 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(opt =>
 {
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+    opt.SlidingExpiration = true;
 
 });
 
