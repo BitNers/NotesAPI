@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NotesAPI.Database;
@@ -38,25 +41,6 @@ namespace NotesAPI.Controllers
             public string password { get; set; }
         }
 
-        private static string GenerateToken(UserModel user)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(AppConfig.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Email, user.Email.ToString()),
-                    new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role, "User")
-                }),
-                Expires = DateTime.UtcNow.AddHours(6),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
         [HttpPost("login")]
         public async Task<string> GetLogin([FromBody] LoginStruct loginStruct)
         {
@@ -83,14 +67,38 @@ namespace NotesAPI.Controllers
             if (!passwordMatch)
                 return "Invalid credentials";
 
-            var token = GenerateToken(usrFound);
+            try
+            {
+                var claimsIdentity = new ClaimsIdentity(new Claim[]
+                    {
+                    new Claim(ClaimTypes.Email, usrFound.Email.ToString()),
+                    new Claim(ClaimTypes.Name,  usrFound.Username.ToString()),
+                    new Claim(ClaimTypes.Role, "User")
+                    }, CookieAuthenticationDefaults.AuthenticationScheme
+                    );
 
-            return "ok: "+ token;
+                var authProperties = new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(5),
+
+                };
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            }
+            catch (Exception err) {
+                Console.WriteLine("[X] Erro: ", err.Message);
+                throw;
+            }
+
+            return "ok, logado!";
         }
 
         [HttpGet("logout")]
-        public string Logout() {
-            HttpContext.Session.Clear();
+        public async Task<string> LogoutAsync() {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             return "Session cleared.";
         }
 
