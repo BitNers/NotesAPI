@@ -79,7 +79,6 @@ namespace NotesAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordSalt")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
@@ -93,13 +92,15 @@ namespace NotesAPI.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<DateTime>("created_at")
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("UserID");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
