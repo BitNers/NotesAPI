@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,35 +20,44 @@ builder.Services.AddDbContext<NotesAPI.Database.DatabaseContext>(opt => { opt.Us
 builder.Services.AddSession(opt => {
     var minutes = TimeSpan.FromMinutes(10);
         opt.IdleTimeout = minutes;
-        opt.Cookie.MaxAge = minutes;
         opt.Cookie.HttpOnly = true;
         opt.Cookie.IsEssential = true;
 });
 
 builder.Services.AddDistributedMemoryCache();
 
-builder.Services.AddAuthentication(x =>
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(opt =>
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(NotesAPI.AppConfig.Secret)),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
+    opt.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+
 });
+
+// builder.Services.AddDataProtection();
+
+// builder.Services.AddAuthentication(x =>
+// {
+//     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+// }).AddJwtBearer(x =>
+// {
+//     x.RequireHttpsMetadata = false;
+//     x.SaveToken = true;
+//     x.TokenValidationParameters = new TokenValidationParameters
+//     {
+//         ValidateIssuerSigningKey = true,
+//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(NotesAPI.AppConfig.Secret)),
+//         ValidateIssuer = false,
+//         ValidateAudience = false
+//     };
+// });
 var app = builder.Build();
 
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapControllers();
 
