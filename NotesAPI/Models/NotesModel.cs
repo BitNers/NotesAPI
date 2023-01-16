@@ -21,7 +21,6 @@ namespace NotesAPI.Models
         public virtual UserModel? ByUser { get; set; }
 
         [DataType(DataType.DateTime)]
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime created_at { get; set; } = DateTime.Now;
 
         [DataType(DataType.DateTime)]
