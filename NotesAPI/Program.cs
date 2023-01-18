@@ -30,6 +30,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 {
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(10);
     opt.SlidingExpiration = true;
+    opt.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return context.Response.CompleteAsync();
+    };
 
 });
 
