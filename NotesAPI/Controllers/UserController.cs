@@ -138,7 +138,8 @@ namespace NotesAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserModel", new { id = userModel.UserID }, userModel);
+            return Ok("Your user was created: " + userModel.Username);
+            //return CreatedAtAction("GetUserModel", new { id = userModel.UserID }, userModel);
         }
 
         // DELETE: api/User/5
