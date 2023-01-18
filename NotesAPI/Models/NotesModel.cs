@@ -9,14 +9,11 @@ namespace NotesAPI.Models
         [Key]
         public int NotesID{ get; set; }
 
-        [Required]
         [MinLength(1), MaxLength(100)]
         public string? Title { get; set; }
         
-        [Required]
         [MinLength(1)]
         public string? Description { get; set; }
-
 
         public virtual UserModel? ByUser { get; set; }
 
