@@ -58,21 +58,23 @@ namespace NotesAPI.Controllers
             return Ok(notesModel);
         }
 
-        // PUT: api/Notes/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutNotesModel(int id, NotesModel notesModel)
-        {
-            if (id != notesModel.NotesID)
-            {
-                return BadRequest();
-            }
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchNotesModel([FromRoute] int id,[FromBody] NotesModel notesModel) {
 
-            _context.Entry(notesModel).State = EntityState.Modified;
+            if ( (notesModel?.NotesID) == null)
+                return BadRequest();
+            
+            NotesModel NoteChoosen = await _context.Notes.FirstOrDefaultAsync(x => x.NotesID == id);
 
             try
             {
-                await _context.SaveChangesAsync();
+                if(NoteChoosen != null)
+                {
+                    if (notesModel.Title != null) NoteChoosen.Title = notesModel.Title;
+                    if(notesModel.Description != null) NoteChoosen.Description = notesModel.Description;
+
+                    await _context.SaveChangesAsync();
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -86,8 +88,9 @@ namespace NotesAPI.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok("Updated Note :)");
         }
+
 
         // POST: api/Notes
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -119,7 +122,7 @@ namespace NotesAPI.Controllers
             _context.Notes.Remove(notesModel);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Your note was sucessfully deleted from Database.");
         }
 
         private bool NotesModelExists(int id)
