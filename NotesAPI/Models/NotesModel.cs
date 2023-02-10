@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace NotesAPI.Models
 {
@@ -15,7 +15,7 @@ namespace NotesAPI.Models
         [MinLength(1)]
         public string? Description { get; set; }
 
-        public virtual UserModel? ByUser { get; set; }
+        public UserModel? ByUser { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime created_at { get; set; } = DateTime.Now;
