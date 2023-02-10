@@ -1,42 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Azure;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NotesAPI.Database;
 using NotesAPI.Models;
 
+
 namespace NotesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "User")]
+    [Authorize]
     public class NotesController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly UserManager<UserModel> _userManager;
 
-        public NotesController(DatabaseContext context)
+        public NotesController(DatabaseContext context, UserManager<UserModel> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        private string getUserEmail() { return User.FindFirstValue(ClaimTypes.Email) ?? "";  }
-
+    
         // GET: api/Notes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<NotesModel>>> GetNotes()
         {
-            string userEmail = getUserEmail();
-            if (userEmail == "")
-                return BadRequest("Invalid credentials, try to login again.");
+            var idToken = Request.HttpContext?.User.FindFirst("sub")?.Value ?? string.Empty;
 
-            var notes = await _context.Notes.Where(u => u.ByUser.Email == userEmail).ToListAsync();
+            var notes = await _context.Notes.Where(n => n.ByUser.Id == idToken).ToListAsync();
             return Ok(notes);
         }
 
@@ -44,12 +37,11 @@ namespace NotesAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<NotesModel>> GetNotesModel([FromRoute] int id)
         {
-            string userEmail = getUserEmail();
-            if (userEmail == "")
-                return BadRequest("Invalid credentials, try to login again.");
+            var idToken = Request.HttpContext?.User.FindFirst("sub")?.Value ?? string.Empty;
 
-            var notesModel = await _context.Notes.Where(u => u.ByUser.Email == userEmail && u.NotesID == id).ToListAsync();
+            var notesModel = await _context.Notes.Where(nt => nt.NotesID == id  && nt.ByUser.Id == idToken).ToListAsync();
 
+            
             if (notesModel == null)
             {
                 return NotFound();
@@ -98,11 +90,13 @@ namespace NotesAPI.Controllers
         public async Task<ActionResult<NotesModel>> PostNotesModel(NotesModel notesModel)
         {
 
-            string userEmail = getUserEmail();
-            if (userEmail == "")
-                return BadRequest("Invalid credentials, try to login again.");
+            // Pegar Usuario pelo Token Enviado
+            var idToken = Request.HttpContext?.User.FindFirst("sub")?.Value ?? string.Empty;
+            var usrDt = await _userManager.FindByIdAsync(idToken);
+                
+            if(usrDt == null) return NotFound("User not exist to create a Note. Contact support.");
 
-            notesModel.ByUser =  _context.Users.Where(u => u.Email == userEmail).FirstOrDefault();
+            notesModel.ByUser = usrDt;
             _context.Notes.Add(notesModel);
             await _context.SaveChangesAsync();
 

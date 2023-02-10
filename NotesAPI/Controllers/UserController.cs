@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿/*using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
@@ -53,7 +53,7 @@ namespace NotesAPI.Controllers
             if (usrFound == null)
                 return "User not found.";
 
-            byte[] passwordSaltBytes = Convert.FromBase64String(usrFound.PasswordSalt ?? "");
+            byte[] passwordSaltBytes = Convert.FromBase64String(usrFound.PasswordHash ?? "");
 
             string generatedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
                   password: loginStruct.password ?? "1",
@@ -62,7 +62,7 @@ namespace NotesAPI.Controllers
                   iterationCount: 10000,
                   numBytesRequested: 256 / 8));
 
-            bool passwordMatch = (generatedPassword == usrFound.Password);
+            bool passwordMatch = (generatedPassword == usrFound.PasswordHash);
 
             if (!passwordMatch)
                 return "Invalid credentials";
@@ -72,7 +72,7 @@ namespace NotesAPI.Controllers
                 var claimsIdentity = new ClaimsIdentity(new Claim[]
                     {
                     new Claim(ClaimTypes.Email, usrFound.Email.ToString()),
-                    new Claim(ClaimTypes.Name,  usrFound.Username.ToString()),
+                    new Claim(ClaimTypes.Name,  usrFound.UserName.ToString()),
                     new Claim(ClaimTypes.Role, "User")
                     }, CookieAuthenticationDefaults.AuthenticationScheme
                     );
@@ -97,7 +97,7 @@ namespace NotesAPI.Controllers
 
         [HttpGet("logout")]
         public async Task<string> LogoutAsync() {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync();
 
             return "Session cleared.";
         }
@@ -124,10 +124,10 @@ namespace NotesAPI.Controllers
             byte[] salt = new byte[128 / 8];
             using (var rng = RandomNumberGenerator.Create()) { rng.GetNonZeroBytes(salt); }
 
-            userModel.PasswordSalt = Convert.ToBase64String(salt);
+            userModel.PasswordHash = Convert.ToBase64String(salt);
 
-            userModel.Password = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                    password: userModel.Password ?? "1",
+            userModel.PasswordHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: userModel.PasswordHash ?? "1",
                     salt: salt,
                     prf: KeyDerivationPrf.HMACSHA1,
                     iterationCount: 10000,
@@ -138,7 +138,7 @@ namespace NotesAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok("Your user was created: " + userModel.Username);
+            return Ok("Your user was created: " + userModel.PasswordHash);
             //return CreatedAtAction("GetUserModel", new { id = userModel.UserID }, userModel);
         }
 
@@ -164,3 +164,4 @@ namespace NotesAPI.Controllers
         }
     }
 }
+*/
