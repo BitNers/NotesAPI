@@ -1,41 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NotesAPI.Models
 {
-    public class UserModel
+    [Table("AspNetUsers")]
+    public class UserModel : IdentityUser
     {
-        [Key]
-        public int UserID { get; set; }
-
-        [Required]
-        [MinLength(3), MaxLength(200)]
-
-        public string? Username { get; set; }
-
-        [Required]
-        [MaxLength(255)]
-        [DataType(DataType.EmailAddress)]
-        public string? Email { get; set; }
-
-
-        [Required]
-        [DataType(DataType.Password)]
-        public string? Password { get; set; }
-        
-        public string? PasswordSalt { get; set; }
-
         public ICollection<NotesModel>? Notes { get; set; }
-
-        [DataType(DataType.DateTime)]
-        
-        public DateTime created_at { get; set; } = DateTime.Now;
-        
-        [DataType(DataType.DateTime)]
-        public DateTime updated_at { get; set; }
-
-        [Timestamp]
-        public Byte[]? chk_timestamp { get; set; }
     }
 }
