@@ -1,8 +1,7 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using NotesAPI.Database;
+using NotesAPI.Models;
+using OpenIddict.Validation.AspNetCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,57 +13,34 @@ builder.Services.AddControllers().AddJsonOptions(opt => {
 
 string conn = builder.Configuration.GetConnectionString("devDB") ?? "NaN";
 
-builder.Services.AddDbContext<NotesAPI.Database.DatabaseContext>(opt => { opt.UseSqlServer(conn); });
+builder.Services.AddDbContext<DatabaseContext>(opt => { opt.UseSqlServer(conn); opt.UseOpenIddict(); });
 
+builder.Services.AddIdentityCore<UserModel>().AddEntityFrameworkStores<DatabaseContext>();
 
-builder.Services.AddSession(opt => {
-    var minutes = TimeSpan.FromMinutes(10);
-        opt.IdleTimeout = minutes;
-        opt.Cookie.HttpOnly = true;
-        opt.Cookie.IsEssential = true;
+builder.Services.AddOpenIddict()
+    .AddValidation(opt => { 
+        opt.UseSystemNetHttp();
+        opt.UseAspNetCore();
+        opt.SetIssuer("https://localhost:8000");
 });
 
-builder.Services.AddDistributedMemoryCache();
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(opt =>
-{
-    opt.ExpireTimeSpan = TimeSpan.FromMinutes(10);
-    opt.SlidingExpiration = true;
-    opt.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return context.Response.CompleteAsync();
-    };
-
+builder.Services.AddAuthentication(opt => {
+    opt.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
 });
 
-// builder.Services.AddDataProtection();
+builder.Services.AddHttpClient();
 
-// builder.Services.AddAuthentication(x =>
-// {
-//     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-// }).AddJwtBearer(x =>
-// {
-//     x.RequireHttpsMetadata = false;
-//     x.SaveToken = true;
-//     x.TokenValidationParameters = new TokenValidationParameters
-//     {
-//         ValidateIssuerSigningKey = true,
-//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(NotesAPI.AppConfig.Secret)),
-//         ValidateIssuer = false,
-//         ValidateAudience = false
-//     };
-// });
 var app = builder.Build();
 
+
+app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSession();
-
 app.MapControllers();
+app.MapDefaultControllerRoute();
 
 app.Run();
