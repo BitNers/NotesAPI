@@ -27,7 +27,9 @@ namespace NotesAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<NotesModel>>> GetNotes()
         {
-            var notes = await _context.Notes.ToListAsync();
+            var idToken = Request.HttpContext?.User.FindFirst("sub")?.Value ?? string.Empty;
+
+            var notes = await _context.Notes.Where(n => n.ByUser.Id == idToken).ToListAsync();
             return Ok(notes);
         }
 
@@ -35,13 +37,9 @@ namespace NotesAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<NotesModel>> GetNotesModel([FromRoute] int id)
         {
-         
-            var notesModel = await _context.Notes.Where(nt => nt.NotesID == id).Select(x => new NotesModel
-            {
-                Title = x.Title,
-                Description = x.Description,
-                NotesID = x.NotesID
-            }).ToListAsync();
+            var idToken = Request.HttpContext?.User.FindFirst("sub")?.Value ?? string.Empty;
+
+            var notesModel = await _context.Notes.Where(nt => nt.NotesID == id  && nt.ByUser.Id == idToken).ToListAsync();
 
             
             if (notesModel == null)
